@@ -127,3 +127,46 @@
 2025-09-29 16:28:01,834 - __main__ - INFO - Iniciando servidor Flask...
 2025-09-29 16:28:01,852 - werkzeug - WARNING -  * Debugger is active!
 2025-09-29 16:28:01,856 - werkzeug - INFO -  * Debugger PIN: 910-150-469
+2025-09-29 16:28:55,664 - werkzeug - INFO - 127.0.0.1 - - [29/Sep/2025 16:28:55] "GET / HTTP/1.1" 200 -
+2025-09-29 16:29:36,868 - __main__ - INFO - Iniciando geração de sitemap para: http://sejaeducamais.com.br/
+2025-09-29 16:29:36,869 - utils.website_scraper - INFO - Iniciando scraping de http://sejaeducamais.com.br/ com profundidade máxima 3
+2025-09-29 16:29:36,869 - utils.website_scraper - INFO - Incluir imagens: True
+2025-09-29 16:29:36,869 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/ (profundidade: 0)
+2025-09-29 16:29:37,531 - utils.website_scraper - INFO - Encontrados 12 links em http://sejaeducamais.com.br/
+2025-09-29 16:29:37,547 - utils.website_scraper - INFO - Encontradas 9 imagens em http://sejaeducamais.com.br/
+2025-09-29 16:29:38,047 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/termos-de-uso.html (profundidade: 1)
+2025-09-29 16:29:38,226 - utils.website_scraper - INFO - Encontrados 3 links em http://sejaeducamais.com.br/termos-de-uso.html
+2025-09-29 16:29:38,232 - utils.website_scraper - INFO - Encontradas 2 imagens em http://sejaeducamais.com.br/termos-de-uso.html
+2025-09-29 16:29:38,733 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/index.html (profundidade: 2)
+2025-09-29 16:29:38,952 - utils.website_scraper - INFO - Encontrados 12 links em http://sejaeducamais.com.br/index.html
+2025-09-29 16:29:38,966 - utils.website_scraper - INFO - Encontradas 9 imagens em http://sejaeducamais.com.br/index.html
+2025-09-29 16:29:39,467 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/quem-somos.html (profundidade: 3)
+2025-09-29 16:29:39,621 - utils.website_scraper - WARNING - Falha ao acessar http://sejaeducamais.com.br/quem-somos.html: status None
+2025-09-29 16:29:40,122 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/politica-de-cookies.html (profundidade: 3)
+2025-09-29 16:29:40,272 - utils.website_scraper - INFO - Encontrados 3 links em http://sejaeducamais.com.br/politica-de-cookies.html
+2025-09-29 16:29:40,273 - utils.website_scraper - INFO - Encontradas 2 imagens em http://sejaeducamais.com.br/politica-de-cookies.html
+2025-09-29 16:29:41,274 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/calculadora.html (profundidade: 3)
+2025-09-29 16:29:41,456 - utils.website_scraper - INFO - Encontrados 5 links em http://sejaeducamais.com.br/calculadora.html
+2025-09-29 16:29:41,460 - utils.website_scraper - INFO - Encontradas 2 imagens em http://sejaeducamais.com.br/calculadora.html
+2025-09-29 16:29:42,961 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/obrigado.html (profundidade: 3)
+2025-09-29 16:29:43,118 - utils.website_scraper - INFO - Encontrados 4 links em http://sejaeducamais.com.br/obrigado.html
+2025-09-29 16:29:43,121 - utils.website_scraper - INFO - Encontradas 2 imagens em http://sejaeducamais.com.br/obrigado.html
+2025-09-29 16:29:44,122 - utils.website_scraper - INFO - Fazendo scraping de http://sejaeducamais.com.br/politica-de-privacidade.html (profundidade: 3)
+2025-09-29 16:29:44,310 - utils.website_scraper - INFO - Encontrados 5 links em http://sejaeducamais.com.br/politica-de-privacidade.html
+2025-09-29 16:29:44,320 - utils.website_scraper - INFO - Encontradas 3 imagens em http://sejaeducamais.com.br/politica-de-privacidade.html
+2025-09-29 16:29:44,321 - utils.website_scraper - INFO - Imagens encontradas: 11
+2025-09-29 16:29:49,141 - utils.website_scraper - INFO - Scraping concluído: 18 URLs encontradas
+2025-09-29 16:29:49,142 - utils.website_scraper - INFO - Páginas: 7, Imagens: 11
+2025-09-29 16:29:49,143 - utils.sitemap_generator - INFO - Gerando sitemap com 18 URLs
+2025-09-29 16:29:49,143 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/logos/Ativo 13.png
+2025-09-29 16:29:49,144 - utils.sitemap_generator - WARNING - URL inválida ignorada: https://sejaparceiroeducamais.com.br/assets/logos/Ativo 10.png
+2025-09-29 16:29:49,145 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/logos/Ativo 14.png
+2025-09-29 16:29:49,145 - utils.sitemap_generator - WARNING - URL inválida ignorada: https://educamais.com.br/assets/logos/Ativo 10.png
+2025-09-29 16:29:49,146 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/icons/Ativo 23.png
+2025-09-29 16:29:49,147 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/icons/Ativo 27.png
+2025-09-29 16:29:49,147 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/icons/Ativo 24.png
+2025-09-29 16:29:49,148 - utils.sitemap_generator - WARNING - URL inválida ignorada: http://sejaeducamais.com.br/assets/logos/Ativo 10.png
+2025-09-29 16:29:49,150 - utils.sitemap_generator - INFO - Sitemap gerado com sucesso
+2025-09-29 16:29:49,151 - __main__ - INFO - Sitemap gerado com sucesso para http://sejaeducamais.com.br/ - 18 URLs encontradas
+2025-09-29 16:29:49,158 - werkzeug - INFO - 127.0.0.1 - - [29/Sep/2025 16:29:49] "POST /generate-sitemap HTTP/1.1" 200 -
+2025-09-29 16:31:11,376 - werkzeug - INFO - 127.0.0.1 - - [29/Sep/2025 16:31:11] "GET / HTTP/1.1" 200 -
