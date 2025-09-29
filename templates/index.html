@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gerador de Sitemap para Websites</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+      body {
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 2.2em;
+      }
+
+      .form-section {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #ddd;
+        border-radius: 6px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+        box-sizing: border-box;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      .checkbox-group {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+
+      .checkbox-group input[type="checkbox"] {
+        width: auto;
+        margin-right: 10px;
+        transform: scale(1.2);
+      }
+
+      .options-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+
+      @media (max-width: 768px) {
+        .options-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 18px;
+        font-weight: 600;
+        transition: transform 0.2s;
+        width: 100%;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+      }
+
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+      }
+
+      .output-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #eee;
+      }
+
+      .stats {
+        background: #e9ecef;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        display: none;
+      }
+
+      .stats h3 {
+        margin: 0 0 10px 0;
+        color: #333;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+      }
+
+      .stat-item {
+        text-align: center;
+        background: white;
+        padding: 10px;
+        border-radius: 4px;
+      }
+
+      .stat-number {
+        font-size: 24px;
+        font-weight: bold;
+        color: #667eea;
+      }
+
+      .stat-label {
+        font-size: 12px;
+        color: #666;
+        text-transform: uppercase;
+      }
+
+      pre {
+        background: #f8f9fa;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 6px;
+        overflow: auto;
+        white-space: pre-wrap;
+        max-height: 500px;
+        font-size: 14px;
+        line-height: 1.4;
+      }
+
+      .error {
+        color: #dc3545;
+        font-weight: 600;
+        background: #f8d7da;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+      }
+
+      .success {
+        color: #155724;
+        background: #d4edda;
+        padding: 15px;
+        border-radius: 6px;
+        margin-top: 15px;
+      }
+
+      .loading {
+        display: none;
+        text-align: center;
+        margin: 20px 0;
+      }
+
+      .spinner {
+        border: 4px solid #f3f3f3;
+        border-top: 4px solid #667eea;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .download-btn {
+        background: #28a745;
+        margin-top: 15px;
+        width: auto;
+        display: none;
+        padding: 10px 20px;
+        font-size: 16px;
+      }
+
+      .download-btn:hover {
+        background: #218838;
+      }
+
+      .help-text {
+        font-size: 14px;
+        color: #666;
+        margin-top: 5px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Gerador de Sitemap para Websites</h1>
+
+      <div class="form-section">
+        <div class="input-group">
+          <label for="website-url">URL do Website:</label>
+          <input
+            type="text"
+            id="website-url"
+            placeholder="https://exemplo.com"
+            value=""
+          />
+          <div class="help-text">
+            Digite a URL completa do website que você deseja mapear
+          </div>
+        </div>
+
+        <div class="options-grid">
+          <div class="input-group">
+            <label for="max-depth">Profundidade Máxima:</label>
+            <select id="max-depth">
+              <option value="1">1 nível (apenas página inicial)</option>
+              <option value="2">2 níveis</option>
+              <option value="3" selected>3 níveis (recomendado)</option>
+              <option value="4">4 níveis</option>
+              <option value="5">5 níveis</option>
+            </select>
+            <div class="help-text">Quantos níveis de profundidade explorar</div>
+          </div>
+
+          <div class="input-group">
+            <div class="checkbox-group">
+              <input type="checkbox" id="include-images" checked />
+              <label for="include-images">Incluir Imagens no Sitemap</label>
+            </div>
+            <div class="help-text">
+              Adiciona URLs de imagens encontradas no site
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button id="generate-btn">Gerar Sitemap Completo</button>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Fazendo scraping do website e gerando sitemap...</p>
+        <p>
+          <small
+            >Isso pode levar alguns minutos dependendo do tamanho do site</small
+          >
+        </p>
+      </div>
+
+      <div class="stats" id="stats">
+        <h3>Estatísticas do Sitemap</h3>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-number" id="total-urls">0</div>
+            <div class="stat-label">Total de URLs</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="page-urls">0</div>
+            <div class="stat-label">Páginas</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="image-urls">0</div>
+            <div class="stat-label">Imagens</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" id="other-urls">0</div>
+            <div class="stat-label">Outros</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="output-section">
+        <h2>Pré-visualização do Sitemap:</h2>
+        <pre id="sitemap-preview">Nenhum sitemap gerado ainda.</pre>
+        <button class="download-btn" id="download-btn">
+          Baixar Sitemap.xml
+        </button>
+      </div>
+
+      <div id="message-container"></div>
+    </div>
+
+    <script>
+      let currentSitemap = "";
+
+      document
+        .getElementById("generate-btn")
+        .addEventListener("click", function () {
+          const websiteUrl = document
+            .getElementById("website-url")
+            .value.trim();
+          const maxDepth = parseInt(document.getElementById("max-depth").value);
+          const includeImages =
+            document.getElementById("include-images").checked;
+
+          const sitemapPreview = document.getElementById("sitemap-preview");
+          const messageContainer = document.getElementById("message-container");
+          const generateBtn = document.getElementById("generate-btn");
+          const downloadBtn = document.getElementById("download-btn");
+          const loading = document.getElementById("loading");
+          const stats = document.getElementById("stats");
+
+          // Limpar mensagens anteriores
+          messageContainer.innerHTML = "";
+          downloadBtn.style.display = "none";
+          stats.style.display = "none";
+
+          // Validar entrada
+          if (!websiteUrl) {
+            showMessage("Por favor, insira uma URL do website.", "error");
+            return;
+          }
+
+          // Validar formato da URL
+          const urlPattern = /^https?:\/\/[^\s<>"'()[\]{}]+$/;
+          if (!urlPattern.test(websiteUrl)) {
+            showMessage(
+              "URL inválida. Use o formato: https://exemplo.com",
+              "error"
+            );
+            return;
+          }
+
+          // Mostrar loading
+          loading.style.display = "block";
+          generateBtn.disabled = true;
+          generateBtn.textContent = "Gerando...";
+          sitemapPreview.textContent = "Fazendo scraping do website...";
+
+          // Fazer requisição
+          axios
+            .post(
+              "/generate-sitemap",
+              {
+                website_url: websiteUrl,
+                max_depth: maxDepth,
+                include_images: includeImages,
+              },
+              {
+                timeout: 300000, // 5 minutos de timeout
+              }
+            )
+            .then((response) => {
+              currentSitemap = response.data;
+              sitemapPreview.textContent = response.data;
+
+              // Calcular estatísticas
+              const urlStats = calculateStats(response.data);
+              updateStats(urlStats);
+
+              showMessage(
+                `Sitemap gerado com sucesso! ${urlStats.total} URLs encontradas.`,
+                "success"
+              );
+              downloadBtn.style.display = "inline-block";
+              stats.style.display = "block";
+            })
+            .catch((error) => {
+              console.error("Erro:", error);
+              sitemapPreview.textContent = "Erro ao gerar sitemap.";
+
+              if (
+                error.response &&
+                error.response.data &&
+                error.response.data.error
+              ) {
+                showMessage(error.response.data.error, "error");
+              } else if (error.code === "ECONNABORTED") {
+                showMessage(
+                  "Timeout: A operação demorou muito para ser concluída.",
+                  "error"
+                );
+              } else {
+                showMessage("Erro inesperado ao gerar o sitemap.", "error");
+              }
+            })
+            .finally(() => {
+              loading.style.display = "none";
+              generateBtn.disabled = false;
+              generateBtn.textContent = "🚀 Gerar Sitemap Completo";
+            });
+        });
+
+      // Botão de download
+      document
+        .getElementById("download-btn")
+        .addEventListener("click", function () {
+          if (currentSitemap) {
+            const blob = new Blob([currentSitemap], {
+              type: "application/xml",
+            });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "sitemap.xml";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+          }
+        });
+
+      // Enter para gerar
+      document
+        .getElementById("website-url")
+        .addEventListener("keypress", function (e) {
+          if (e.key === "Enter") {
+            document.getElementById("generate-btn").click();
+          }
+        });
+
+      function showMessage(message, type) {
+        const messageContainer = document.getElementById("message-container");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = type;
+        messageDiv.textContent = message;
+        messageContainer.appendChild(messageDiv);
+      }
+
+      function calculateStats(xmlContent) {
+        const locMatches = xmlContent.match(/<loc>([^<]+)<\/loc>/g) || [];
+        const urls = locMatches.map((match) => match.replace(/<\/?loc>/g, ""));
+
+        const imageExtensions = [
+          ".jpg",
+          ".jpeg",
+          ".png",
+          ".gif",
+          ".bmp",
+          ".svg",
+          ".webp",
+          ".ico",
+          ".tiff",
+          ".tif",
+        ];
+
+        let pages = 0;
+        let images = 0;
+        let others = 0;
+
+        urls.forEach((url) => {
+          const isImage = imageExtensions.some((ext) =>
+            url.toLowerCase().includes(ext)
+          );
+          if (isImage) {
+            images++;
+          } else if (url.includes(".") && !url.endsWith("/")) {
+            others++;
+          } else {
+            pages++;
+          }
+        });
+
+        return {
+          total: urls.length,
+          pages: pages,
+          images: images,
+          others: others,
+        };
+      }
+
+      function updateStats(stats) {
+        document.getElementById("total-urls").textContent = stats.total;
+        document.getElementById("page-urls").textContent = stats.pages;
+        document.getElementById("image-urls").textContent = stats.images;
+        document.getElementById("other-urls").textContent = stats.others;
+      }
+    </script>
+  </body>
+</html>
