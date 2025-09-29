@@ -117,3 +117,13 @@
 2025-09-29 16:03:20,684 - utils.sitemap_generator - INFO - Sitemap gerado com sucesso
 2025-09-29 16:03:20,684 - __main__ - INFO - Sitemap gerado com sucesso para http://sejaeducamais.com.br/ - 14 URLs encontradas
 2025-09-29 16:03:20,684 - werkzeug - INFO - 127.0.0.1 - - [29/Sep/2025 16:03:20] "POST /generate-sitemap HTTP/1.1" 200 -
+2025-09-29 16:27:59,325 - werkzeug - INFO -  * Detected change in 'C:\\Users\\luizk\\Documents\\GitHub\\gerador-sitemap\\utils\\website_scraper.py', reloading
+2025-09-29 16:27:59,516 - werkzeug - INFO -  * Restarting with stat
+2025-09-29 16:28:00,170 - __main__ - INFO - Iniciando servidor Flask...
+2025-09-29 16:28:00,199 - werkzeug - WARNING -  * Debugger is active!
+2025-09-29 16:28:00,211 - werkzeug - INFO -  * Debugger PIN: 910-150-469
+2025-09-29 16:28:01,284 - werkzeug - INFO -  * Detected change in 'C:\\Users\\luizk\\Documents\\GitHub\\gerador-sitemap\\utils\\website_scraper.py', reloading
+2025-09-29 16:28:01,389 - werkzeug - INFO -  * Restarting with stat
+2025-09-29 16:28:01,834 - __main__ - INFO - Iniciando servidor Flask...
+2025-09-29 16:28:01,852 - werkzeug - WARNING -  * Debugger is active!
+2025-09-29 16:28:01,856 - werkzeug - INFO -  * Debugger PIN: 910-150-469

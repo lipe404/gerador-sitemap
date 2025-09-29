@@ -26,6 +26,7 @@ class WebsiteScraper:
         self.delay = delay
         self.visited_urls = set()
         self.found_urls = set()
+        self.found_images = set()  # Conjunto separado para imagens
         self.base_domain = None
 
         # Extensões de arquivos para incluir no sitemap
@@ -34,10 +35,10 @@ class WebsiteScraper:
             '.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx'
         }
 
-        # Extensões de imagens
+        # Extensões de imagens (mais abrangente)
         self.image_extensions = {
             '.jpg', '.jpeg', '.png', '.gif', '.bmp', '.svg', '.webp',
-            '.ico', '.tiff', '.tif'
+            '.ico', '.tiff', '.tif', '.avif', '.jfif', '.pjpeg', '.pjp'
         }
 
     def scrape_website(self, start_url: str) -> List[Dict[str, str]]:
@@ -58,13 +59,20 @@ class WebsiteScraper:
 
             logger.info(
                 f"Iniciando scraping de {start_url} com profundidade máxima {self.max_depth}")
+            logger.info(f"Incluir imagens: {self.include_images}")
 
             # Iniciar scraping recursivo
             self._scrape_recursive(start_url, 0)
 
+            # Combinar URLs de páginas e imagens
+            all_urls = self.found_urls.copy()
+            if self.include_images:
+                all_urls.update(self.found_images)
+                logger.info(f"Imagens encontradas: {len(self.found_images)}")
+
             # Converter URLs encontradas para formato do sitemap
             url_list = []
-            for url in self.found_urls:
+            for url in all_urls:
                 url_info = {
                     'url': url,
                     'lastmod': self._get_last_modified_date(url),
@@ -78,6 +86,8 @@ class WebsiteScraper:
 
             logger.info(
                 f"Scraping concluído: {len(url_list)} URLs encontradas")
+            logger.info(
+                f"Páginas: {len(self.found_urls)}, Imagens: {len(self.found_images)}")
             return url_list
 
         except Exception as e:
@@ -105,6 +115,8 @@ class WebsiteScraper:
             # Fazer requisição
             response = self._make_request(url)
             if not response or response.status_code != 200:
+                logger.warning(
+                    f"Falha ao acessar {url}: status {response.status_code if response else 'None'}")
                 return
 
             # Adicionar URL atual à lista
@@ -113,18 +125,22 @@ class WebsiteScraper:
             # Verificar se é uma página HTML
             content_type = response.headers.get('content-type', '').lower()
             if 'text/html' not in content_type:
+                logger.info(
+                    f"Pulando {url} - não é HTML (content-type: {content_type})")
                 return
 
             # Parsear HTML
             soup = BeautifulSoup(response.content, 'html.parser')
 
-            # Extrair links
+            # Extrair links para páginas
             links = self._extract_links(soup, url)
+            logger.info(f"Encontrados {len(links)} links em {url}")
 
             # Extrair imagens se solicitado
             if self.include_images:
                 images = self._extract_images(soup, url)
-                links.update(images)
+                self.found_images.update(images)
+                logger.info(f"Encontradas {len(images)} imagens em {url}")
 
             # Fazer scraping recursivo dos links encontrados
             for link in links:
@@ -173,7 +189,7 @@ class WebsiteScraper:
 
     def _extract_images(self, soup: BeautifulSoup, base_url: str) -> Set[str]:
         """
-        Extrai todas as imagens de uma página
+        Extrai todas as imagens de uma página de forma mais abrangente
 
         Args:
             soup (BeautifulSoup): Objeto BeautifulSoup da página
@@ -184,31 +200,108 @@ class WebsiteScraper:
         """
         images = set()
 
-        # Imagens em tags img
+        # 1. Imagens em tags img com src
         for img_tag in soup.find_all('img', src=True):
             src = img_tag['src']
             full_url = self._resolve_url(src, base_url)
             if full_url and self._is_valid_image_url(full_url):
                 images.add(full_url)
+                logger.debug(f"Imagem encontrada (src): {full_url}")
 
-        # Imagens em srcset
+        # 2. Imagens em tags img com data-src (lazy loading)
+        for img_tag in soup.find_all('img', attrs={'data-src': True}):
+            src = img_tag['data-src']
+            full_url = self._resolve_url(src, base_url)
+            if full_url and self._is_valid_image_url(full_url):
+                images.add(full_url)
+                logger.debug(f"Imagem encontrada (data-src): {full_url}")
+
+        # 3. Imagens em srcset
         for img_tag in soup.find_all('img', srcset=True):
             srcset = img_tag['srcset']
+            # Processar cada URL no srcset
+            for src_item in srcset.split(','):
+                # Pegar apenas a URL, ignorar o descritor
+                src = src_item.strip().split()[0]
+                full_url = self._resolve_url(src, base_url)
+                if full_url and self._is_valid_image_url(full_url):
+                    images.add(full_url)
+                    logger.debug(f"Imagem encontrada (srcset): {full_url}")
+
+        # 4. Imagens em elementos picture > source
+        for source_tag in soup.find_all('source', srcset=True):
+            srcset = source_tag['srcset']
             for src_item in srcset.split(','):
                 src = src_item.strip().split()[0]
                 full_url = self._resolve_url(src, base_url)
                 if full_url and self._is_valid_image_url(full_url):
                     images.add(full_url)
+                    logger.debug(
+                        f"Imagem encontrada (picture source): {full_url}")
 
-        # Imagens de fundo em CSS inline
+        # 5. Imagens de fundo em CSS inline
         for element in soup.find_all(style=True):
             style = element['style']
-            bg_images = re.findall(
-                r'background-image:\s*url\(["\']?([^"\']+)["\']?\)', style)
-            for bg_image in bg_images:
-                full_url = self._resolve_url(bg_image, base_url)
+            # Regex mais robusta para background-image
+            bg_patterns = [
+                r'background-image:\s*url\(["\']?([^"\'()]+)["\']?\)',
+                r'background:\s*[^;]*url\(["\']?([^"\'()]+)["\']?\)'
+            ]
+
+            for pattern in bg_patterns:
+                bg_images = re.findall(pattern, style, re.IGNORECASE)
+                for bg_image in bg_images:
+                    full_url = self._resolve_url(bg_image, base_url)
+                    if full_url and self._is_valid_image_url(full_url):
+                        images.add(full_url)
+                        logger.debug(
+                            f"Imagem encontrada (CSS background): {full_url}")
+
+        # 6. Imagens em tags link com rel="icon" ou rel="apple-touch-icon"
+        for link_tag in soup.find_all('link', href=True):
+            rel = link_tag.get('rel', [])
+            if isinstance(rel, list):
+                rel = ' '.join(rel)
+            if 'icon' in rel.lower():
+                href = link_tag['href']
+                full_url = self._resolve_url(href, base_url)
                 if full_url and self._is_valid_image_url(full_url):
                     images.add(full_url)
+                    logger.debug(f"Imagem encontrada (icon): {full_url}")
+
+        # 7. Imagens em meta tags (og:image, twitter:image, etc.)
+        meta_properties = ['og:image', 'twitter:image', 'twitter:image:src']
+        for prop in meta_properties:
+            for meta_tag in soup.find_all('meta', property=prop):
+                content = meta_tag.get('content')
+                if content:
+                    full_url = self._resolve_url(content, base_url)
+                    if full_url and self._is_valid_image_url(full_url):
+                        images.add(full_url)
+                        logger.debug(
+                            f"Imagem encontrada (meta {prop}): {full_url}")
+
+        # 8. Buscar por URLs de imagem em atributos data-* personalizados
+        for element in soup.find_all(attrs=lambda x: x and any(attr.startswith('data-') and 'img' in attr.lower() for attr in x)):
+            for attr, value in element.attrs.items():
+                if attr.startswith('data-') and 'img' in attr.lower():
+                    full_url = self._resolve_url(value, base_url)
+                    if full_url and self._is_valid_image_url(full_url):
+                        images.add(full_url)
+                        logger.debug(
+                            f"Imagem encontrada (data-* attr): {full_url}")
+
+        # 9. Buscar por padrões de URL de imagem em scripts JSON-LD ou outros scripts
+        for script_tag in soup.find_all('script'):
+            if script_tag.string:
+                # Buscar URLs que parecem ser de imagens
+                img_urls = re.findall(r'["\']([^"\']*\.(?:' + '|'.join(ext[1:] for ext in self.image_extensions) + r'))["\']',
+                                      script_tag.string, re.IGNORECASE)
+                for img_url in img_urls:
+                    full_url = self._resolve_url(img_url, base_url)
+                    if full_url and self._is_valid_image_url(full_url):
+                        images.add(full_url)
+                        logger.debug(f"Imagem encontrada (script): {full_url}")
 
         return images
 
@@ -224,8 +317,15 @@ class WebsiteScraper:
             str: URL absoluta ou None se inválida
         """
         try:
-            if not url or url.startswith('#') or url.startswith('javascript:') or url.startswith('mailto:'):
+            if not url or url.startswith('#') or url.startswith('javascript:') or url.startswith('mailto:') or url.startswith('tel:'):
                 return None
+
+            # Limpar a URL
+            url = url.strip()
+
+            # Se já é uma URL absoluta, verificar se é do mesmo domínio
+            if url.startswith('http'):
+                return self._normalize_url(url) if self._is_same_domain(url) else url
 
             # Resolver URL relativa
             resolved_url = urljoin(base_url, url)
@@ -233,7 +333,8 @@ class WebsiteScraper:
             # Normalizar URL
             return self._normalize_url(resolved_url)
 
-        except Exception:
+        except Exception as e:
+            logger.debug(f"Erro ao resolver URL {url}: {str(e)}")
             return None
 
     def _normalize_url(self, url: str) -> str:
@@ -259,8 +360,8 @@ class WebsiteScraper:
                 ''  # Remover fragmento
             ))
 
-            # Remover trailing slash para diretórios (exceto root)
-            if normalized.endswith('/') and len(parsed.path) > 1:
+            # Remover trailing slash para arquivos (mas manter para diretórios)
+            if normalized.endswith('/') and len(parsed.path) > 1 and '.' in parsed.path.split('/')[-1]:
                 normalized = normalized[:-1]
 
             return normalized
@@ -304,7 +405,7 @@ class WebsiteScraper:
                 return True
 
             # URLs sem extensão (provavelmente páginas dinâmicas)
-            if '.' not in path.split('/')[-1]:
+            if '.' not in path.split('/')[-1] or path.endswith('/'):
                 return True
 
             return False
@@ -336,7 +437,7 @@ class WebsiteScraper:
 
     def _is_valid_image_url(self, url: str) -> bool:
         """
-        Verifica se uma URL é uma imagem válida
+        Verifica se uma URL é uma imagem válida de forma mais robusta
 
         Args:
             url (str): URL para verificar
@@ -348,7 +449,24 @@ class WebsiteScraper:
             parsed = urlparse(url)
             path = parsed.path.lower()
 
-            return any(path.endswith(ext) for ext in self.image_extensions)
+            # Verificar extensão de imagem
+            if any(path.endswith(ext) for ext in self.image_extensions):
+                return True
+
+            # Verificar se a URL contém indicadores de imagem (mesmo sem extensão clara)
+            image_indicators = ['image', 'img', 'photo',
+                                'picture', 'thumb', 'avatar', 'icon']
+            if any(indicator in path for indicator in image_indicators):
+                # Fazer uma verificação adicional se necessário
+                return True
+
+            # Verificar parâmetros da query que podem indicar imagem
+            if parsed.query:
+                query_lower = parsed.query.lower()
+                if any(ext[1:] in query_lower for ext in self.image_extensions):
+                    return True
+
+            return False
 
         except Exception:
             return False
@@ -453,13 +571,13 @@ class WebsiteScraper:
         if any(keyword in path for keyword in ['/blog/', '/news/', '/articles/']):
             return '0.7'
 
-        # Imagens têm prioridade baixa
+        # Imagens têm prioridade baixa mas não muito baixa
         if any(path.endswith(ext) for ext in self.image_extensions):
-            return '0.3'
+            return '0.4'
 
         # Recursos estáticos
         if any(path.endswith(ext) for ext in ['.css', '.js', '.pdf']):
-            return '0.4'
+            return '0.3'
 
         # Calcular prioridade baseada na profundidade
         depth = len([p for p in path.split('/') if p])

@@ -6,6 +6,7 @@
     <title>Gerador de Sitemap para Websites</title>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
+      /* Mantém o CSS existente */
       body {
         font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
         margin: 0;
@@ -231,11 +232,20 @@
         color: #666;
         margin-top: 5px;
       }
+
+      .image-details {
+        background: #f0f8ff;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+        display: none;
+        font-size: 12px;
+      }
     </style>
   </head>
   <body>
     <div class="container">
-      <h1>Gerador de Sitemap para Websites</h1>
+      <h1>🗺️ Gerador de Sitemap para Websites</h1>
 
       <div class="form-section">
         <div class="input-group">
@@ -270,13 +280,17 @@
               <label for="include-images">Incluir Imagens no Sitemap</label>
             </div>
             <div class="help-text">
-              Adiciona URLs de imagens encontradas no site
+              Adiciona URLs de todas as imagens encontradas no site
+            </div>
+            <div class="image-details" id="image-details">
+              Incluirá: imagens em tags img, srcset, picture, backgrounds CSS,
+              ícones, meta tags (og:image, twitter:image), e imagens em scripts
             </div>
           </div>
         </div>
       </div>
 
-      <button id="generate-btn">Gerar Sitemap Completo</button>
+      <button id="generate-btn">🚀 Gerar Sitemap Completo</button>
 
       <div class="loading" id="loading">
         <div class="spinner"></div>
@@ -289,7 +303,7 @@
       </div>
 
       <div class="stats" id="stats">
-        <h3>Estatísticas do Sitemap</h3>
+        <h3>📊 Estatísticas do Sitemap</h3>
         <div class="stats-grid">
           <div class="stat-item">
             <div class="stat-number" id="total-urls">0</div>
@@ -311,10 +325,10 @@
       </div>
 
       <div class="output-section">
-        <h2>Pré-visualização do Sitemap:</h2>
+        <h2>📋 Pré-visualização do Sitemap:</h2>
         <pre id="sitemap-preview">Nenhum sitemap gerado ainda.</pre>
         <button class="download-btn" id="download-btn">
-          Baixar Sitemap.xml
+          💾 Baixar Sitemap.xml
         </button>
       </div>
 
@@ -323,6 +337,14 @@
 
     <script>
       let currentSitemap = "";
+
+      // Mostrar detalhes das imagens quando checkbox é marcado
+      document
+        .getElementById("include-images")
+        .addEventListener("change", function () {
+          const imageDetails = document.getElementById("image-details");
+          imageDetails.style.display = this.checked ? "block" : "none";
+        });
 
       document
         .getElementById("generate-btn")
@@ -390,7 +412,7 @@
               updateStats(urlStats);
 
               showMessage(
-                `Sitemap gerado com sucesso! ${urlStats.total} URLs encontradas.`,
+                `Sitemap gerado com sucesso! ${urlStats.total} URLs encontradas (${urlStats.pages} páginas, ${urlStats.images} imagens, ${urlStats.others} outros).`,
                 "success"
               );
               downloadBtn.style.display = "inline-block";
@@ -462,6 +484,7 @@
         const locMatches = xmlContent.match(/<loc>([^<]+)<\/loc>/g) || [];
         const urls = locMatches.map((match) => match.replace(/<\/?loc>/g, ""));
 
+        // Lista mais abrangente de extensões de imagem
         const imageExtensions = [
           ".jpg",
           ".jpeg",
@@ -473,6 +496,10 @@
           ".ico",
           ".tiff",
           ".tif",
+          ".avif",
+          ".jfif",
+          ".pjpeg",
+          ".pjp",
         ];
 
         let pages = 0;
@@ -480,13 +507,35 @@
         let others = 0;
 
         urls.forEach((url) => {
-          const isImage = imageExtensions.some((ext) =>
-            url.toLowerCase().includes(ext)
-          );
+          const urlLower = url.toLowerCase();
+          const isImage =
+            imageExtensions.some((ext) => urlLower.includes(ext)) ||
+            urlLower.includes("/image") ||
+            urlLower.includes("/img") ||
+            urlLower.includes("/photo") ||
+            urlLower.includes("/picture");
+
           if (isImage) {
             images++;
-          } else if (url.includes(".") && !url.endsWith("/")) {
-            others++;
+          } else if (urlLower.includes(".") && !urlLower.endsWith("/")) {
+            // Verificar se é uma página comum
+            const pageExtensions = [
+              ".html",
+              ".htm",
+              ".php",
+              ".asp",
+              ".aspx",
+              ".jsp",
+            ];
+            const isPage =
+              pageExtensions.some((ext) => urlLower.includes(ext)) ||
+              !urlLower.split("/").pop().includes(".");
+
+            if (isPage) {
+              pages++;
+            } else {
+              others++;
+            }
           } else {
             pages++;
           }
@@ -506,6 +555,9 @@
         document.getElementById("image-urls").textContent = stats.images;
         document.getElementById("other-urls").textContent = stats.others;
       }
+
+      // Mostrar detalhes das imagens por padrão
+      document.getElementById("image-details").style.display = "block";
     </script>
   </body>
 </html>
