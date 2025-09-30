@@ -1,3 +1,5 @@
 logs/app.log
 logs/*.log
 *.log
+utils/__pycache__.py*
+venv

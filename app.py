@@ -1,7 +1,7 @@
 from flask import Flask, request, Response, jsonify, render_template
 import logging
 import os
-from datetime import datetime
+# from datetime import datetime
 from utils.website_scraper import WebsiteScraper
 from utils.sitemap_generator import SitemapGenerator
 
@@ -88,7 +88,8 @@ def generate_sitemap():
         sitemap_xml = sitemap_generator.generate_sitemap(urls)
 
         logger.info(
-            f"Sitemap gerado com sucesso para {website_url} - {len(urls)} URLs encontradas")
+            f"Sitemap gerado com sucesso para {website_url} - {
+                len(urls)} URLs encontradas")
 
         # Retornar XML como resposta
         return Response(
